@@ -19,3 +19,10 @@ button {
 button:hover {
   background-color: #0056b3;
 }
+
+input {
+  width: 200px;
+  padding: 10px 5px;
+  cursor: pointer;
+  margin: 1rem;
+}

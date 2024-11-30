@@ -20,7 +20,7 @@ export const uploadFileInChunks = async (file, setProgress, setError, setUploadi
             formData.append('totalChunks', totalChunks);
             formData.append('fileName', file.name);
 
-            await axiosInstance.post('/v1/file-upload/chunk', formData, {
+            await axiosInstance.post('/v1/file/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 // eslint-disable-next-line no-loop-func
                 onUploadProgress: (progressEvent) => {
@@ -46,5 +46,36 @@ export const uploadFileInChunks = async (file, setProgress, setError, setUploadi
         setUploading(false);
         setError(error.response?.data?.message || 'Failed to upload file');
         console.error('Upload error:', error);
+    }
+};
+
+export const handleDownload = async (fileId, setProgress, setError, setIsDownloading) => {
+    setIsDownloading(true);
+    setProgress(0);
+    setError(null);
+
+    try {
+        const response = await axiosInstance.get(`/v1/file/${fileId}/download`, {
+            responseType: 'blob',
+            onDownloadProgress: (progressEvent) => {
+                const total = progressEvent.total || response.headers['content-length'];
+                if (total) {
+                    const percentage = Math.round((progressEvent.loaded * 100) / total);
+                    setProgress(percentage);
+                }
+            },
+        });
+        const blob = new Blob([response], { type: 'application/octet-stream' });
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileId;
+        a.click();
+        URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+        setError('Error downloading file. Please try again.');
+        console.error(error);
+    } finally {
+        setIsDownloading(false);
     }
 };
